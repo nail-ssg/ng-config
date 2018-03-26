@@ -14,8 +14,8 @@ class Stack(object):
         super(Stack, self).__init__()
         # self.arg = arg
 
-    def push(layer, id):
+    def push(self, layer, id=None):
         return id
 
-    def as_dict():
+    def as_dict(self):
         return {}

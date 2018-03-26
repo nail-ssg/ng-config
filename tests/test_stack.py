@@ -16,39 +16,41 @@ def setup():
     r3 = {}
 
 
-def teardown():
-    print("basic teardown into module")
+import pytest
 
 
-def setup_module(module):
-    print("module setup")
+@pytest.fixture
+def layers(request):
+    st = Stack()
+    l1 = Layer({"a": {"b": "c", "d": 1}, "e": [
+               2, 3, "f"], "g": "h", "i": None})
+    st.push(l1)
+    return {
+        "st": st,
+        "l1": l1,
+        "l2": Layer({"a": {"j": "k"}}),
+        "l3": Layer({"-a": None}),
+        "l3": Layer({"e-": ["f"]}),
+        "r1": {},
+        "r2": {},
+        "r3": {},
+    }
 
 
-def teardown_module(module):
-    print("module teardown")
+def test_deleteproperty(layers):
+    print("test")
+    layers['st'].push(layers['l2'])
+    assert layers['st'].as_dict() == layers['r1']
 
 
-def setup_function(function):
-    print("function setup")
+# def test_deleteitem():
+#     st.push(l3)
+#     assert st.as_dict == r2
 
 
-def teardown_function(function):
-    print("function teardown")
-
-
-def test_deleteproperty():
-    st.push(l2)
-    assert st.as_dict == r1
-
-
-def test_deleteitem():
-    st.push(l3)
-    assert st.as_dict == r2
-
-
-def test_override():
-    st.push(l4)
-    assert st.as_dict == r3
+# def test_override():
+#     st.push(l4)
+#     assert st.as_dict == r3
 
 
 # def test_deleteproperty():
