@@ -35,7 +35,7 @@ def test_override(stack, l1, d0):
     result = d0
     result["a"] = {"j": "k"}
     stack.push(l1)
-    assert stack.as_dict == result
+    assert stack.as_dict() == result
 
 
 def test_deleteproperty(stack, l2, d0):
@@ -45,8 +45,9 @@ def test_deleteproperty(stack, l2, d0):
     assert stack.as_dict() == result
 
 
-def test_deleteitem():
+def test_deleteitem(stack, d0):
     result = d0
+    print(result)
     result["e"].remove("f")
-    st.push(l3)
-    assert st.as_dict == result
+    stack.push(l3)
+    assert stack.as_dict() == result
