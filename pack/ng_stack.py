@@ -1,39 +1,45 @@
-from collections import UserDict
+from collections import OrderedDict
 from copy import deepcopy
 
 
-class Layer(UserDict):
+def is_dict(obj):
+    return isinstance(obj, dict) or isinstance(obj, OrderedDict)
+
+
+class Layer(OrderedDict):
     """docstring for Layer"""
 
     def __init__(self, layer, name=None):
-        layer_dict = deepcopy(layer)
-        super(Layer, self).__init__(layer_dict)
+        super(Layer, self).__init__(layer)
 
     def _modify(self, obj, value):
         for key in value:
-            if not key:
-                continue
-            if key[0] == '-':
+            if len(key) > 1 and key[0] == '-':
                 key_ = key[1:]
                 if key_ in self:
                     del obj[key_]
-        for key in value:
-            if not key:
-                continue
-            if key[0] == '-':
-                continue
-            if key in obj:
-                print('k: ', key)
-                print(' obj: ', obj)
-                print(' val: ', value)
-                if (isinstance(obj, dict) or isinstance(obj, UserDict)) and isinstance(value, dict):
-                    print('ok')
-                    self._modify(obj[key], value[key])
-            else:
-                obj[key] = value[key]
+            elif len(key) > 1 and key[-1] == '-':
+                key_ = key[:-1]
+                if key_ in obj:
+                    sub_obj = obj[key_]
+                    sub_value = value[key]
+                    if isinstance(sub_obj, list) and isinstance(sub_value, list):
+                        for item in sub_value:
+                            sub_obj.remove(item)
+        if is_dict(obj) and is_dict(value):
+            for key in value:
+                if len(key) > 1 and '-' in (key[0], key[-1]):
+                    continue
+                elif key in obj:
+                    sub_obj = obj[key]
+                    sub_value = value[key]
+                    if is_dict(sub_obj) and is_dict(sub_value):
+                        self._modify(sub_obj, sub_value)
+                else:
+                    obj[key] = value[key]
 
     def __add__(self, value):
-        if not isinstance(value, Layer) and not isinstance(value, dict):
+        if not is_dict(value):
             raise Exception('Ups')
         result = Layer(self)
         self._modify(result, value)
