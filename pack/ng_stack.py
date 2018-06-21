@@ -10,31 +10,56 @@ class Layer(OrderedDict):
     """docstring for Layer"""
 
     def __init__(self, layer, name=None):
-        super(Layer, self).__init__(layer)
+        new_layer = deepcopy(dict(layer))
+        super(Layer, self).__init__(new_layer)
 
     def _modify(self, obj, value):
         for key in value:
-            if len(key) > 1 and key[0] == '-':
-                key_ = key[1:]
+            if len(key) > 2 and key[:2] == '-!':
+                key_ = key[2:]
                 if key_ in self:
                     del obj[key_]
-            elif len(key) > 1 and key[-1] == '-':
-                key_ = key[:-1]
+            elif len(key) > 2 and key[-2:] == '!-':
+                key_ = key[:-2]
                 if key_ in obj:
                     sub_obj = obj[key_]
                     sub_value = value[key]
-                    if isinstance(sub_obj, list) and isinstance(sub_value, list):
+                    if (isinstance(sub_obj, list) or is_dict(sub_obj)) and isinstance(sub_value, list):
                         for item in sub_value:
-                            sub_obj.remove(item)
-        if is_dict(obj) and is_dict(value):
+                            if item in sub_obj:
+                                sub_obj.remove(item)
+            elif key in obj and key in value:
+                sub_obj = obj[key]
+                sub_value = value[key]
+                if (isinstance(sub_obj, list) or is_dict(sub_obj)) and isinstance(sub_value, list):
+                    for item in sub_value:
+                        if item[:2] != '-!': continue
+                        key_ = item[2:]
+                        if key_ in sub_obj:
+                            if isinstance(sub_obj, list):
+                                sub_obj.remove(key_)
+                            else:
+                                del sub_obj[key_]
+        if not is_dict(obj):
+            return
+        if is_dict(value):
             for key in value:
-                if len(key) > 1 and '-' in (key[0], key[-1]):
+                if len(key) > 2 and ('-!' == key[:2] or '!-' == key[-2:]):
                     continue
                 elif key in obj:
                     sub_obj = obj[key]
                     sub_value = value[key]
                     if is_dict(sub_obj) and is_dict(sub_value):
                         self._modify(sub_obj, sub_value)
+                    elif isinstance(sub_obj, list) and isinstance(sub_value, list):
+                        for item in sub_value:
+                            if len(item) > 2 and '-!' == item[:2]:
+                                continue
+                            sub_obj += [item]
+                    elif is_dict(sub_obj) and isinstance(sub_value, list):
+                        pass
+                    else:
+                        obj[key] = sub_value
                 else:
                     obj[key] = value[key]
 
@@ -48,15 +73,15 @@ class Layer(OrderedDict):
 
 class Stack(object):
     """docstring for Stack"""
-    _layers = {}
-    _layer_order = []
     _last_id = 0
     _final_layer = None
 
     def __init__(self):
         super(Stack, self).__init__()
+        self._layers = {}
+        self._layer_order = []
+        self._final_layer = Layer({})
         self._assemble()
-        # self.arg = arg
 
     def _assemble(self):
         self._final_layer = Layer({})
