@@ -33,7 +33,8 @@ class Layer(OrderedDict):
                 sub_value = value[key]
                 if (isinstance(sub_obj, list) or is_dict(sub_obj)) and isinstance(sub_value, list):
                     for item in sub_value:
-                        if item[:2] != '-!': continue
+                        if item[:2] != '-!':
+                            continue
                         key_ = item[2:]
                         if key_ in sub_obj:
                             if isinstance(sub_obj, list):
